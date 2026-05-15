@@ -32,6 +32,9 @@ def create_transaction(tx: TransactionCreate, db: Session = Depends(get_db)):
     rule_result = rule_engine.evaluate(tx_dict)
 
     # Сохранение в базу
+    # is_fraud намеренно оставляется None — это поле для реальной метки,
+    # которая проставляется вручную при разметке или верификации.
+    # predicted_fraud — результат работы системы (сейчас rule-based, позже ML).
     new_tx = Transaction(
         transaction_id=tx.transaction_id,
         account_id=tx.account_id,
@@ -44,9 +47,10 @@ def create_transaction(tx: TransactionCreate, db: Session = Depends(get_db)):
         velocity_1h=tx.velocity_1h,
         avg_amount_30d=tx.avg_amount_30d,
         new_merchant=tx.new_merchant,
-        is_fraud=rule_result["is_fraud"],
+        is_fraud=None,
         predicted_fraud=rule_result["is_fraud"],
-        risk_score=rule_result["risk_score"]
+        risk_score=rule_result["risk_score"],
+        needs_ml_check=rule_result["needs_ml_check"]
     )
 
     db.add(new_tx)

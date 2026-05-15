@@ -30,9 +30,10 @@ class Transaction(Base):
     new_merchant = Column(Boolean, default=False)
 
     # Результаты
-    is_fraud = Column(Boolean, default=False)  # правда ли это мошенничество
-    predicted_fraud = Column(Boolean, default=None)  # предсказала ли система
-    risk_score = Column(Float, default=0.0)  # от 0.0 до 1.0
+    is_fraud = Column(Boolean, default=None)   # реальная метка (None = неизвестно, проставляется вручную или при разметке)
+    predicted_fraud = Column(Boolean, default=None)  # предсказание системы (rule-based или ML)
+    risk_score = Column(Float, default=0.0)    # итоговый скор риска от 0.0 до 1.0
+    needs_ml_check = Column(Boolean, default=False)  # флаг: требует ли транзакция проверки ML-модулем
 
     def __repr__(self):
         return f"<Transaction {self.transaction_id} - {self.amount} RUB>"
