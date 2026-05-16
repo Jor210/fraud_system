@@ -1,6 +1,7 @@
+# rules/engine.py
 from datetime import datetime
-from typing import Dict, List
-
+from typing import Dict
+from ml.predictor import predict_transaction
 
 class RuleEngine:
     def __init__(self):
@@ -8,61 +9,45 @@ class RuleEngine:
 
     def _load_rules(self):
         return [
-            # 1. Крупные суммы
             {
                 "name": "large_amount",
                 "condition": lambda t: t["amount"] > 500000,
                 "score": 0.85,
-                "explanation": "Сумма транзакции превышает 500 000 руб."
+                "explanation": "Сумма превышает 500 000 руб."
             },
-            # 2. Новый получатель + большая сумма
             {
                 "name": "new_merchant_high_amount",
                 "condition": lambda t: t.get("new_merchant", False) and t["amount"] > 150000,
-                "score": 0.80,
+                "score": 0.82,
                 "explanation": "Первый платёж новому получателю на крупную сумму"
             },
-            # 3. Высокая скорость (velocity)
             {
                 "name": "high_velocity",
                 "condition": lambda t: t.get("velocity_1h", 0) > 7,
                 "score": 0.90,
-                "explanation": "Высокая частота операций (более 7 за час)"
+                "explanation": "Высокая скорость операций (>7 за час)"
             },
-            # 4. Нетипичное время суток
             {
                 "name": "unusual_time",
                 "condition": lambda t: self._is_unusual_time(t),
-                "score": 0.65,
-                "explanation": "Операция в нетипичное время (ночь)"
+                "score": 0.70,
+                "explanation": "Операция в нетипичное время"
             },
-            # 5. Подозрительное изменение суммы
             {
                 "name": "amount_spike",
                 "condition": lambda t: t["amount"] > t.get("avg_amount_30d", 0) * 5,
-                "score": 0.75,
-                "explanation": "Резкий скачок суммы по сравнению со средним значением"
+                "score": 0.78,
+                "explanation": "Резкий скачок суммы относительно среднего"
             },
-            # 6. Подмена реквизитов (один из самых частых видов мошенничества)
             {
-                "name": "possible_account_takeover",
+                "name": "possible_takeover",
                 "condition": lambda t: t.get("velocity_1h", 0) > 5 and t.get("new_merchant", False),
-                "score": 0.85,
-                "explanation": "Возможная компрометация аккаунта (много операций + новые получатели)"
-            },
-            # 7. Дробление сумм (признак отмывания)
-            # Одной суммы в диапазоне недостаточно — дробление проявляется в повторяемости.
-            # Сигнал: несколько операций в диапазоне "под порогом" за короткий промежуток.
-            {
-                "name": "structuring",
-                "condition": lambda t: 8000 < t["amount"] < 15000 and t.get("velocity_1h", 0) >= 3,
-                "score": 0.60,
-                "explanation": "Признак дробления: повторяющиеся суммы под пороговым значением (возможное отмывание)"
+                "score": 0.88,
+                "explanation": "Признаки компрометации аккаунта"
             },
         ]
 
     def _is_unusual_time(self, t: Dict) -> bool:
-        """Проверка на ночное время"""
         try:
             ts = t.get("timestamp")
             if isinstance(ts, str):
@@ -82,14 +67,30 @@ class RuleEngine:
                 if rule["condition"](transaction):
                     triggered_rules.append(rule["explanation"])
                     total_score += rule["score"]
-            except Exception:
+            except:
                 continue
 
-        risk_score = min(total_score, 1.0)
+        rule_risk_score = min(total_score / 2, 1.0)   # нормализация
+
+        # === ML Проверка ===
+        try:
+            ml_result = predict_transaction(transaction)
+            ml_score = ml_result["risk_score_ml"]
+        except Exception as e:
+            print(f"ML prediction error: {e}")
+            ml_score = 0.3  # fallback
+
+        # Гибридный скоринг
+        final_risk_score = round(0.55 * rule_risk_score + 0.45 * ml_score, 4)
+
+        is_fraud = final_risk_score >= 0.65
 
         return {
-            "risk_score": round(risk_score, 2),
-            "is_fraud": risk_score >= 0.65,
+            "risk_score": final_risk_score,
+            "is_fraud": is_fraud,
+            "rule_risk_score": round(rule_risk_score, 4),
+            "ml_risk_score": ml_score,
             "triggered_rules": triggered_rules,
-            "needs_ml_check": risk_score > 0.4
+            "needs_ml_check": True,   # теперь ML всегда используется
+            "explanation": triggered_rules
         }

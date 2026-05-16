@@ -5,10 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="86da4fad-a3c5-4511-a941-0c315636c479" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/dataset.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ml/predictor.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ml/train_model.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dashboard.py" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/dataset.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ml/encoders.pkl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ml/model.pkl" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ml/predictor.py" beforeDir="false" afterPath="$PROJECT_DIR$/ml/predictor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ml/synthetic_transactions.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ml/train_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/ml/train_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/1_Add_Transaction.py" beforeDir="false" afterPath="$PROJECT_DIR$/pages/1_Add_Transaction.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rules/engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/rules/engine.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,6 +46,7 @@
     "Python.init_db.executor": "Run",
     "Python.main.executor": "Run",
     "Python.models.executor": "Run",
+    "Python.predictor.executor": "Run",
     "Python.session.executor": "Run",
     "Python.test_db.executor": "Run",
     "Python.test_db_simple.executor": "Run",
@@ -51,7 +58,12 @@
     "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
 }]]></component>
-  <component name="RunManager" selected="Python.train_model">
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Kingston\PycharmProjects\fraud-detection-system\ml" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.predictor">
     <configuration name="dataset" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="fraud-detection-system" />
       <option name="ENV_FILES" value="" />
@@ -118,7 +130,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="test_db_simple" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="predictor" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="fraud-detection-system" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -127,11 +139,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/ml" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test_db_simple.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/ml/predictor.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -164,11 +176,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.predictor" />
         <item itemvalue="Python.train_model" />
         <item itemvalue="Python.dataset" />
         <item itemvalue="Python.init_db" />
         <item itemvalue="Python.models" />
-        <item itemvalue="Python.test_db_simple" />
       </list>
     </recent_temporary>
   </component>

@@ -1,129 +1,117 @@
+# ml/train_model.py
 import pandas as pd
 import joblib
-
+import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import (
-    classification_report,
-    confusion_matrix,
-    accuracy_score
-)
+from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, precision_recall_curve
+import warnings
+warnings.filterwarnings('ignore')
 
 # =========================
-# LOAD DATASET
+# LOAD DATA
 # =========================
-
+print("Загрузка данных...")
 df = pd.read_csv("synthetic_transactions.csv")
 
-# =========================
-# DROP UNUSED COLUMNS
-# =========================
-
-df = df.drop(columns=[
-    "transaction_id",
-    "timestamp"
-])
+print(f"Размер датасета: {df.shape}")
+print(f"Мошенничество: {df['is_fraud'].sum()} ({df['is_fraud'].mean()*100:.2f}%)")
 
 # =========================
-# ENCODE CATEGORICAL FEATURES
+# FEATURE ENGINEERING
 # =========================
+# Дополнительные полезные признаки
+df['amount_to_avg_ratio'] = df['amount_deviation']
+df['velocity_per_hour_score'] = df['velocity_1h'] * (df['amount'] / 10000)  # комбинированный признак
 
-categorical_columns = [
-    "merchant_category",
-    "country",
-    "device_type"
+# =========================
+# SELECT FEATURES
+# =========================
+categorical_features = ['merchant_category', 'device_type', 'location']
+numerical_features = [
+    'amount', 'velocity_1h', 'avg_amount_30d', 'new_merchant',
+    'hour', 'amount_deviation', 'amount_to_avg_ratio', 'velocity_per_hour_score'
 ]
 
+target = 'is_fraud'
+
+X = df[categorical_features + numerical_features]
+y = df[target]
+
+print(f"Используется признаков: {len(X.columns)}")
+
+# =========================
+# ENCODE CATEGORICAL
+# =========================
 encoders = {}
 
-for column in categorical_columns:
-
+for col in categorical_features:
     encoder = LabelEncoder()
-
-    df[column] = encoder.fit_transform(df[column])
-
-    encoders[column] = encoder
+    X[col] = encoder.fit_transform(X[col])
+    encoders[col] = encoder
 
 # =========================
-# FEATURES / TARGET
+# TRAIN-TEST SPLIT
 # =========================
-
-X = df.drop(columns=["is_fraud"])
-
-y = df["is_fraud"]
-
-# =========================
-# TRAIN TEST SPLIT
-# =========================
-
 X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
+    X, y,
     test_size=0.2,
     random_state=42,
     stratify=y
 )
 
 # =========================
-# MODEL
+# MODEL TRAINING
 # =========================
+print("\nОбучение модели RandomForest...")
 
 model = RandomForestClassifier(
-    n_estimators=150,
-    max_depth=12,
+    n_estimators=200,
+    max_depth=14,
+    min_samples_split=5,
+    min_samples_leaf=2,
+    class_weight='balanced',      # важно при дисбалансе
     random_state=42,
-    class_weight="balanced"
+    n_jobs=-1
 )
-
-# =========================
-# TRAIN
-# =========================
 
 model.fit(X_train, y_train)
 
 # =========================
-# PREDICTIONS
+# PREDICTION & EVALUATION
 # =========================
-
 y_pred = model.predict(X_test)
+y_pred_proba = model.predict_proba(X_test)[:, 1]
 
-# =========================
-# METRICS
-# =========================
+print("\n" + "="*60)
+print("РЕЗУЛЬТАТЫ МОДЕЛИ")
+print("="*60)
 
-print("\nAccuracy:")
-print(accuracy_score(y_test, y_pred))
+print("\nAccuracy:", round(model.score(X_test, y_test), 4))
+print("ROC-AUC:  ", round(roc_auc_score(y_test, y_pred_proba), 4))
+
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred, digits=4))
 
 print("\nConfusion Matrix:")
 print(confusion_matrix(y_test, y_pred))
 
-print("\nClassification Report:")
-print(classification_report(y_test, y_pred))
-
-# =========================
-# FEATURE IMPORTANCE
-# =========================
-
+# Feature Importance
 feature_importance = pd.DataFrame({
-    "feature": X.columns,
-    "importance": model.feature_importances_
-})
+    'feature': X.columns,
+    'importance': model.feature_importances_
+}).sort_values('importance', ascending=False)
 
-feature_importance = feature_importance.sort_values(
-    by="importance",
-    ascending=False
-)
-
-print("\nFeature Importance:")
-print(feature_importance)
+print("\nТОП-10 важных признаков:")
+print(feature_importance.head(10))
 
 # =========================
-# SAVE MODEL
+# SAVE MODEL AND ENCODERS
 # =========================
-
 joblib.dump(model, "model.pkl")
-
 joblib.dump(encoders, "encoders.pkl")
 
-print("\nModel saved successfully!")
+print("\nМодель успешно сохранена!")
+print("   → model.pkl")
+print("   → encoders.pkl")
