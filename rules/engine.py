@@ -75,10 +75,10 @@ class RuleEngine:
         # === ML Проверка ===
         try:
             ml_result = predict_transaction(transaction)
-            ml_score = ml_result["risk_score_ml"]
+            ml_score = ml_result["fraud_probability"]
         except Exception as e:
             print(f"ML prediction error: {e}")
-            ml_score = 0.3  # fallback
+            ml_score = 0.3
 
         # Гибридный скоринг
         final_risk_score = round(0.55 * rule_risk_score + 0.45 * ml_score, 4)
